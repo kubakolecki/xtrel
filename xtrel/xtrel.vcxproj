@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{49DE65E1-09A2-4E9E-ADC8-853956786F97}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>whiteduck</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>xtrel</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>GOOGLE_GLOG_DLL_DECL=;_MBCS;CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)GOOGLE_GLOG_DLL_DECL=;_MBCS;CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\LIBC++\ceres-solver-1.12.0-for-VS\ceres-windows\ceres-solver\config;D:\LIBC++\ceres-solver-1.12.0-for-VS\ceres-windows\glog\src\windows;D:\LIBC++\ceres-solver-1.12.0-for-VS\ceres-windows\Eigen;D:\LIBC++\ceres-solver-1.12.0-for-VS\ceres-windows\ceres-solver\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\LIBC++\ceres-solver-1.12.0-for-VS\ceres-windows\x64\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ceres.lib;libglog_static.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>GOOGLE_GLOG_DLL_DECL=;_MBCS;CERES_MSVC_USE_UNDERSCORE_PREFIXED_BESSEL_FUNCTIONS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>D:\LIBC++\ceres-solver-1.14.0\include;D:\LIBC++\ceres-solver-1.14.0\glog\src\windows;D:\LIBC++\Eigen 3.3.7;D:\LIBC++\ceres-solver-1.14.0\ceres-bin\config</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\LIBC++\ceres-solver-1.14.0\gflags\gflags-bin\lib\Release;D:\LIBC++\ceres-solver-1.14.0\suitesparse-metis-for-windows-1.5.0\lapack_windows\x64;D:\LIBC++\ceres-solver-1.14.0\glog\glog-bin\Release;D:\LIBC++\ceres-solver-1.14.0\ceres-bin\lib\Release;D:\LIBC++\ceres-solver-1.14.0\suitesparse-metis-for-windows-1.5.0\build\install\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>gflags.lib;metis.lib;suitesparseconfig.lib;libspqr.lib;libcamd.lib;libamd.lib;libcolamd.lib;libccolamd.lib;liblapack.lib;libblas.lib;libcholmod.lib;libcxsparse.lib;glog.lib;ceres.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(TargetPath)" "D:\DANE\Visual_Studio\C++\bundlab\x64\Release"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="AngularSurvey3D.h" />
+    <ClInclude Include="AngularSurvey3DContainer.h" />
+    <ClInclude Include="BundleAdjustment.h" />
+    <ClInclude Include="BundleAdjustmentData.h" />
+    <ClInclude Include="BundleAdjustmentReport.h" />
+    <ClInclude Include="BundleAdjustmentSettings.h" />
+    <ClInclude Include="CalibrationCertificate.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="EO.h" />
+    <ClInclude Include="ImageData.h" />
+    <ClInclude Include="ImageDataContainer.h" />
+    <ClInclude Include="ImagePoint.h" />
+    <ClInclude Include="ImagePointContainer.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="photogrammetry.h" />
+    <ClInclude Include="ResidualAngleHzLeft.h" />
+    <ClInclude Include="ResidualAngleHzRight.h" />
+    <ClInclude Include="ResidualAngleV.h" />
+    <ClInclude Include="ResidualObjectPoint.h" />
+    <ClInclude Include="ResidualProjectionObjPt.h" />
+    <ClInclude Include="ResidualProjectionObjPtFixed.h" />
+    <ClInclude Include="ResidualProjectionObjPtThermal.h" />
+    <ClInclude Include="ReverseDistortionEstimator.h" />
+    <ClInclude Include="TerrainPoint.h" />
+    <ClInclude Include="TerrainPointContainer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AngularSurvey3D.cpp" />
+    <ClCompile Include="AngularSurvey3DContainer.cpp" />
+    <ClCompile Include="BundleAdjustment.cpp" />
+    <ClCompile Include="BundleAdjustmentReport.cpp" />
+    <ClCompile Include="BundleAdjustmentSettings.cpp" />
+    <ClCompile Include="CalibrationCertificate.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="EO.cpp" />
+    <ClCompile Include="ImageData.cpp" />
+    <ClCompile Include="ImageDataContainer.cpp" />
+    <ClCompile Include="ImagePoint.cpp" />
+    <ClCompile Include="ImagePointContainer.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="photogrammetry.cpp" />
+    <ClCompile Include="ReverseDistortionEstimator.cpp" />
+    <ClCompile Include="TerrainPoint.cpp" />
+    <ClCompile Include="TerrainPointContainer.cpp" />
+    <ClCompile Include="xtrel.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
