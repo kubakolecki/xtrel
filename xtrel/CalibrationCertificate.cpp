@@ -116,7 +116,7 @@ void CalibrationCertificate::generate(const Camera& camera, const ba::BundleAdju
 	str << "\\textbf{DEFINITIONS}" << "\n";
 	str << "\\end{center}" << "\n";
 
-	str << "\nCamera parameters provide the relationship between points in the 3D camera frame (object points) and the pixel coordinates in the image.\n";
+	str << "\nCamera parameters provide the relationship between points in the 3D camera frame (object points) and coordinates in image plane.\n";
 	str << "In the idealized projection, where no distortion is present, the projection equation are as follows:\n";
 
 	str << "\\begin{equation}" << "\n";
@@ -130,14 +130,11 @@ void CalibrationCertificate::generate(const Camera& camera, const ba::BundleAdju
 	str << "\\end{equation}" << "\n";
 
 	str << "where:\n";
-	str << "$x'$ and $y'$ are the measured image plane coordinates of the object point $P(X',Y',Z')$, projected using the camera\n";
+	str << "$x'$ and $y'$ are the measured image plane coordinates (Figure \\ref{fig:01}) of the object point $P(X',Y',Z')$, projected using the camera\n";
 	str << "with principal distance $c$ and principal point $(x_0, y_0)$.\n";
+	str << "The Z-axis of the camera frame looks towards back of the camera body\n";
 	str << "Parameters $c$, $x_0$ and $y_0$ are known as internal orientation parameters.\n";
-	str << "$X'$, $Y'$, $Z'$ provide the position of point $P$ in the 3D camera frame with the following definition (Figure \\ref{fig:01}):\n";
-	str << "For the exactly horizontal, terrestrial image:\n";
-	str << "$+X$ axis: towards left,\n";
-	str << "$+Y$ axis: upwards,\n";
-	str << "$+Z$ axis: backwards.\n";
+	str << "$X'$, $Y'$, $Z'$ provide the position of point $P$ in the 3D camera frame.:\n";
 	str << "Please notice that the dimension of $x'$ and $y'$ depends purely on the unit of provided internal orientation parameters and is independant on the dimensions\n";
 	str << " of $X$, $Y$ and $Z$.\n";
 	str << "In the presence of distortion the polynomial correction coefficients $[k_1, k_2, k_3, p_1, p_2]$ are estimated along with the internal orientation parameters. Mentioned coefficients provide the\n";
@@ -222,10 +219,7 @@ void CalibrationCertificate::generate(const Camera& camera, const ba::BundleAdju
 	str << "shift the P' point to the place where it occurs in real the image (to the measured loation)\n";
 	str << "Here we will use the 'reveresed distortion' term, as the distortion is considerd to act in a reversed manner compared to the case where it was treated as an phenomene we aimed to correct for\n";
 	str << "As this distortion model is more often used by computer vision community, we will keep the OpenCV library definitions (Figure \\ref{fig:01}):\n";
-	str << "For the horizontal, terrestrial image:" << "\\newline\n";
-	str << "+X axis: towards left" << "\\newline\n";
-	str << "+Y axis: downwards" << "\\newline\n";
-	str << "+Z axis: looking forward, along the lens axis" << "\\newline\n";
+	str << "(+Z axis: looking forward, along the lens axis)" << "\\newline\n";
 	str << "An object point P (X, Y, Z) projects to the image according to the equation (notice the difference in sign):\n";
 
 	str << "\\begin{equation}" << "\n";

@@ -176,10 +176,13 @@
     <ClInclude Include="ImagePointContainer.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="photogrammetry.h" />
+    <ClInclude Include="RayIntersectionCheck.h" />
     <ClInclude Include="ResidualAngleHzLeft.h" />
     <ClInclude Include="ResidualAngleHzRight.h" />
     <ClInclude Include="ResidualAngleV.h" />
     <ClInclude Include="ResidualObjectPoint.h" />
+    <ClInclude Include="ResidualOrientationEuler.h" />
+    <ClInclude Include="ResidualProjectionCenter.h" />
     <ClInclude Include="ResidualProjectionObjPt.h" />
     <ClInclude Include="ResidualProjectionObjPtFixed.h" />
     <ClInclude Include="ResidualProjectionObjPtThermal.h" />
@@ -207,6 +210,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="photogrammetry.cpp" />
+    <ClCompile Include="RayIntersectionCheck.cpp" />
     <ClCompile Include="ReverseDistortionEstimator.cpp" />
     <ClCompile Include="TerrainPoint.cpp" />
     <ClCompile Include="TerrainPointContainer.cpp" />

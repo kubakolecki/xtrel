@@ -267,7 +267,7 @@ Camera::~Camera(void)
 {
 }
 
-double Camera::getRadialCorrectionX(double x, double y)
+double Camera::getRadialCorrectionX(double x, double y) const noexcept
 {
 	double rr = x * x + y * y;
 	double dx = x * (RadialDistortion[0] * rr + RadialDistortion[1] * rr * rr + RadialDistortion[2] * rr * rr * rr);
@@ -275,7 +275,7 @@ double Camera::getRadialCorrectionX(double x, double y)
 	return dx;
 }
 
-double Camera::getRadialCorrectionY(double x, double y)
+double Camera::getRadialCorrectionY(double x, double y) const noexcept
 {
 	double rr = x * x + y * y;
 	double dy = y * (RadialDistortion[0] * rr + RadialDistortion[1] * rr * rr + RadialDistortion[2] * rr * rr * rr);
@@ -283,7 +283,7 @@ double Camera::getRadialCorrectionY(double x, double y)
 	return dy;
 }
 
-double Camera::getTangentialCorrectionX(double x, double y)
+double Camera::getTangentialCorrectionX(double x, double y) const noexcept
 {
 	double rr = x * x + y * y;
 	double dx = TangentialDistortion[0] * (rr + 2.0*x*x) + 2.0 * TangentialDistortion[1] * x * y;
@@ -291,21 +291,21 @@ double Camera::getTangentialCorrectionX(double x, double y)
 	return dx;
 }
 
-double Camera::getTangentialCorrectionY(double x, double y)
+double Camera::getTangentialCorrectionY(double x, double y) const noexcept
 {
 	double rr = x * x + y * y;
 	double dy = 2.0 * TangentialDistortion[0] * x * y + TangentialDistortion[1] * (rr + 2.0*y*y);
 	dy = -dy;
-	return 0.0;
+	return dy;
 }
 
-double Camera::getTotalDistortionCorrectionX(double x, double y)
+double Camera::getTotalDistortionCorrectionX(double x, double y) const noexcept
 {
 	double dx = getRadialCorrectionX(x, y) + getTangentialCorrectionX(x, y);
 	return dx;
 }
 
-double Camera::getTotalDistortionCorrectionY(double x, double y)
+double Camera::getTotalDistortionCorrectionY(double x, double y) const noexcept
 {
 	double dy = getRadialCorrectionX(x, y) + getTangentialCorrectionX(x, y);
 	return dy;

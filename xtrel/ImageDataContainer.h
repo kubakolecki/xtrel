@@ -17,7 +17,7 @@ public:
 	std::map<std::string, Camera> DataCameras;
 
 private:
-	const double RHO = 3.14159265358979323846264 / 180.0;
+	const double RHO{ 3.14159265358979323846264 / 180.0 };
 
 };
 

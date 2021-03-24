@@ -780,7 +780,7 @@ void fT_internal_differentials_thermal(const double * ObjectPoint, const double 
 	DY[2] = 1.0; //dy/dy0
 }
 
-void fT_vectorTrans3(double *A, double* v, double *vt)
+void fT_vectorTrans3(const double *A, const double* v, double *vt)
 {
 	//Transformacja wektora
 	//Funkcja do mnozenia macierzy o wymiarach 3x3 przez wektor 3x1
@@ -790,7 +790,7 @@ void fT_vectorTrans3(double *A, double* v, double *vt)
 	vt[2] = A[6] * v[0] + A[7] * v[1] + A[8] * v[2];
 }
 
-void fT_vectorTrans3(double *A, double *b, double* v, double *vt)
+void fT_vectorTrans3(const double *A,const double *b, const double* v, double *vt)
 {
 	//Transformacja wektora
 	//Funkcja do mnozenia macierzy o wymiarach 3x3 przez wektor 3x1
@@ -904,7 +904,7 @@ void fT_matMult(double *A, double *B, int* sizeA, int* sizeB, double *C)
 	}
 }
 
-void fT_dispMatrix3(double *A)
+void fT_dispMatrix3(const double *A)
 {
 	//Funkcja wyswietla macierz 3x3
 	for (int i = 0; i < 9; i++)

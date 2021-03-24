@@ -8,9 +8,12 @@ public:
 	double Coords[3] = { 0.0,0.0,0.0 };
 	double CoordsErrorsApriori[3] = { 0.01, 0.01,0.01 };
 	double CoordsErrorsAposteriori[3] = { 0.01, 0.01,0.01 };
+
 	double Angles[3] = { 0.0, 1.5707963267948966, 0.0 }; //all math is to be done in radians!
 	double AnglesErrorsApriori[3] = { 0.00005, 0.00005,0.00005 };
 	double AnglesErrorsAposteriori[3] = { 0.00005, 0.00005,0.00005 };
+
+
 	double R[9] = {	1.00000,   0.00000,   0.00000,
 					0.00000,   0.00000, - 1.00000,
 					0.00000,   1.00000,   0.00000 };

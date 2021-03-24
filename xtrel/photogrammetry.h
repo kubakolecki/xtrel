@@ -23,11 +23,11 @@ void fT_distortion_differentials_r(const double * Internal, double x, double y, 
 void fT_distortion_differentials_t(const double * Internal, double x, double y, double *DXt, double *DYt);
 void fT_internal_differentials(const double * ObjectPoint, const double * Coords, const double * Angles, const string & Parametrization, double * DX, double * DY);
 void fT_internal_differentials_thermal(const double * ObjectPoint, const double * Coords, const double * Angles, const double* ThermalCoeffs, const string & Parametrization, double * DX, double * DY);
-void fT_vectorTrans3(double *A, double* v, double *vt);
-void fT_vectorTrans3(double *A, double* b, double* v, double *vt);
+void fT_vectorTrans3(const double *A, const double* v, double *vt);
+void fT_vectorTrans3(const double *A, const double* b, const double* v, double *vt);
 void fT_transpose3(double *A, double *AT);
 void fT_matTranspose(double *A, int *sizeA, double *AT);
 void fT_matInv3(double*A, double *B);
 void fT_matMult3(double *A, double *B, double *C);
 void fT_matMult(double *A, double *B, int* sizeA, int* sizeB, double *C);
-void fT_dispMatrix3(double *A);
+void fT_dispMatrix3(const double *A);

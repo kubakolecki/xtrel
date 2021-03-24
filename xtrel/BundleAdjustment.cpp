@@ -4,8 +4,8 @@
 #include "BundleAdjustment.h"
 #include "ResidualProjectionObjPt.h"
 #include "ResidualProjectionObjPtFixed.h"
-#include "ResidualProjectionObjPtThermal.h"
 #include "ResidualObjectPoint.h"
+#include "ResidualProjectionCenter.h"
 #include "ResidualAngleHzLeft.h"
 #include "ResidualAngleHzRight.h"
 #include "ResidualAngleV.h"
@@ -65,10 +65,6 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 	}
 
 	std::cout << "adding residual blocks..." << std::endl;
-	if (_ThermalFlag)
-	{
-		std::cout << "THERMAL FLAG = TRUE. USING THERMAL COEFFICIENTS FOR X AND Z OBJECT POINT COORDINATES!" << std::endl;
-	}
 
 	for (auto &p : BAData.ImagePoints.Data) //dealing with image point observwations
 	{
@@ -127,34 +123,17 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 
 			if (BAData.Settings.MathModel == BAMathModel::SOFT || BAData.Settings.MathModel == BAMathModel::TIGHT)
 			{
-				
-				if (_ThermalFlag == false)
-				{						
-					Problem.AddResidualBlock(new ResidualProjectionObjPt(p.X, p.Y, 0.5*(p.MX + p.MY), parametrization),
-						lossfnc_ptr,
-						ipc_ptr,	//projection center coordinates
-						iro_ptr,	//rotation
-						opc_ptr,	//object point coordinates
-						iio_ptr,	//internal orientation
-						ird_ptr,	//radial distortion k1 and k2
-						irdk3_ptr,	//radial distortion k3
-						itd_ptr);	//tangential distortion
-				}
-				else
-				{
-					Problem.AddResidualBlock(new ResidualProjectionObjPtThermal(p.X, p.Y, 0.5*(p.MX + p.MY), parametrization),
-						lossfnc_ptr,
-						ipc_ptr,	//projection center coordinates
-						iro_ptr,	//rotation
-						opc_ptr,	//object point coordinates
-						iio_ptr,	//internal orientation
-						ird_ptr,	//radial distortion k1 and k2
-						irdk3_ptr,	//radial distortion k3
-						itd_ptr,	//tangential distortion
-						_Thermal);	//thermal coeffs [Tx, Tz], private members
-				}
+									
+				Problem.AddResidualBlock(new ResidualProjectionObjPt(p.X, p.Y, 0.5*(p.MX + p.MY), parametrization),
+					lossfnc_ptr,
+					ipc_ptr,	//projection center coordinates
+					iro_ptr,	//rotation
+					opc_ptr,	//object point coordinates
+					iio_ptr,	//internal orientation
+					ird_ptr,	//radial distortion k1 and k2
+					irdk3_ptr,	//radial distortion k3
+					itd_ptr);	//tangential distortion
 			}
-
 		}
 		catch (const std::out_of_range& oor)
 		{
@@ -164,10 +143,12 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 			std::cout << "possible reasons:\n";
 			std::cout << "no object point with the '" << p.Name << "' id" << std::endl;
 			std::cout << "no image with the '" << p.ImageName << "' id" << std::endl;
-			std::cout << "no camera deffined for the image '" << p.ImageName <<"'" << std::endl;
+			std::cout << "no camera defined for the image '" << p.ImageName <<"'" << std::endl;
 			return;
 		}
 	}
+
+	//object points:
 
 	if (BAData.Settings.MathModel == BAMathModel::SOFT)
 	{
@@ -183,6 +164,7 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 		}
 	}
 
+	//geodetic observations:
 
 	if (BAData.Settings.MathModel == BAMathModel::TIGHT)
 	{
@@ -228,10 +210,32 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 					new ResidualAngleV(BAData.ObjectPoints.Data.at(p.Ids.at(1)),
 						p.V,
 						1.0 / BAData.Settings.GeodeticVMesAcc));
-
 			Problem.AddResidualBlock(cost_function, lossfnc_ptr, BAData.ObjectPoints.Data.at(p.Ids.at(p.AdjustedPointId)).Coords);
 		}
+	}
 
+	// coordinates
+	for (auto & imageData : BAData.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedPosition) continue;
+		Problem.AddResidualBlock(new ResidualProjectionCenter(imageData.second.EOObserved.Coords,
+			imageData.second.EOObserved.CoordsErrorsApriori[0],
+			imageData.second.EOObserved.CoordsErrorsApriori[1],
+			imageData.second.EOObserved.CoordsErrorsApriori[2]),
+			lossfnc_ptr,
+			imageData.second.EOApproximated.Coords);
+	}
+
+	// angles
+	for (auto & imageData : BAData.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedOrientation) continue;
+		Problem.AddResidualBlock(new ResidualProjectionCenter(imageData.second.EOObserved.Angles,
+			imageData.second.EOObserved.AnglesErrorsApriori[0],
+			imageData.second.EOObserved.AnglesErrorsApriori[1],
+			imageData.second.EOObserved.AnglesErrorsApriori[2]),
+			lossfnc_ptr,
+			imageData.second.EOApproximated.Angles);
 	}
 
 	//Fixing paramter blocks related to camera:
@@ -250,72 +254,7 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 			Problem.SetParameterBlockConstant(BAData.ImageOrientationData.DataCameras.at(c_settings.first).TangentialDistortion);
 	}
 
-
-
-
-	
-	//PRINTING OUT PARAMTER BLOCKS: (debug)
-
-	/*
-
-	std::vector<double*> parameter_pointers;
-	Problem.GetParameterBlocks(&parameter_pointers);
-
-	std::cout << "there are " << parameter_pointers.size() << " parameter blocks" << std::endl;
-	std::cout << "listing the parameter blocks: " << std::endl;
-	for (size_t i = 0; i < parameter_pointers.size(); i++)
-	{
-		int s = Problem.ParameterBlockSize(parameter_pointers.at(i));
-		std::cout << i << " " << parameter_pointers.at(i) << " " << s;
-		for (int j = 0; j < s; j++)
-		{
-			std::cout <<" " <<*(parameter_pointers.at(i) + j);
-		}
-		std::cout << std::endl;
-			
-	}
-	*/
-
-	/*
-	std::vector<ceres::ResidualBlockId> residual_blocks;
-
-	Problem.GetResidualBlocks(&residual_blocks);
-	std::cout << "there are " << residual_blocks.size() << " residual blocks" << std::endl;
-
-	std::cout << "listing parameters for residuals: " << std::endl;
-	for (size_t i = 0; i < residual_blocks.size(); i++)
-	{
-		
-		std::vector<double*> paramter_block_for_residuals;
-		Problem.GetParameterBlocksForResidualBlock(residual_blocks.at(i), &paramter_block_for_residuals);
-		for (int j = 0; j < paramter_block_for_residuals.size(); j++)
-		{
-			int s = Problem.ParameterBlockSize(paramter_block_for_residuals.at(j));
-			std::cout << " parameters:";
-			for (int k = 0; k < s; k++)
-			{
-				std::cout << " " << *(paramter_block_for_residuals.at(j) + k);
-			}
-		}
-		std::cout << std::endl;
-
-
-	}
-
-	std::cout << "\ntrying to evaluate the problem " << std::endl;
-	std::vector<double> residuals;
-
-	Problem.Evaluate(ceres::Problem::EvaluateOptions::EvaluateOptions(), NULL, &residuals, NULL, NULL);
-	std::cout << "the residuals: " << std::endl;
-	for (size_t i = 0; i < residuals.size(); i++)
-	{
-		std::cout << i << " " << residuals.at(i) << std::endl;
-	}
-	*/
-
-
-
-	//Solving the ceres problem:
+	//Solving ceres problem:
 	std::cout << "solving the problem..." << std::endl;
 	ceres::Solver::Summary Summary;
 	try {
@@ -329,11 +268,6 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 	FullReport = Summary.FullReport();
 	std::cout << FullReport  << endl;
 	
-	if (_ThermalFlag == true)
-	{
-		std::cout << "Thermal coefficients: "<<std::fixed<< std::setprecision(8) << _Thermal[0] << " " << _Thermal[1] << std::endl;
-	}
-
 
 	//Evaluating the problem:
 	ceres::Problem::EvaluateOptions eval_options;
@@ -343,28 +277,7 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 	ceres::CRSMatrix jacobian;
 	Problem.Evaluate(eval_options, &total_cost, &residuals, nullptr, &jacobian);
 
-	//wiriting jacobian to text file (debug)
-	/*
-	std::cout << "jacobian dimensions: " << jacobian.num_rows << " X " << jacobian.num_cols << std::endl;
-	std::ofstream jstr;
-	jstr.open("jacobian.txt");
-	for (int i = 0; i < jacobian.num_rows; i++)
-	{
-		jstr << "row " << i << " :";
-		for (int c = jacobian.rows[i]; c < jacobian.rows[i + 1]; c++)
-		{
-			jstr << " " << jacobian.cols[c];
-		}
-		jstr << std::endl;
 
-		for (int v = jacobian.rows[i]; v < jacobian.rows[i + 1]; v++)
-		{
-			jstr << " " << jacobian.values[v];
-		}
-		jstr << std::endl;
-	}
-	jstr.close();
-	*/
 
 	cout << "covariance evaluation..." <<std::endl;
 	//EXTRACTING STANDARD DEVIATIONS:
@@ -405,13 +318,9 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 		covariance_blocks.emplace_back(c.second.TangentialDistortion, c.second.TangentialDistortion);
 	}
 
-	//5. Preparing covariance block for thermal coefficients (if used)
-	if (_ThermalFlag == true)
-	{
-		covariance_blocks.emplace_back(_Thermal, _Thermal);
-	}
 
-	//6. Preparing off-diagonal blocks for camera and thermal parameters
+
+	//5. Preparing off-diagonal blocks for camera and thermal parameters
 	for (auto &c : BAData.ImageOrientationData.DataCameras)
 	{
 		covariance_blocks.emplace_back(c.second.InternalOrientation, c.second.RadialDistortion);
@@ -422,23 +331,15 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 		covariance_blocks.emplace_back(c.second.RadialDistortion, c.second.TangentialDistortion);
 
 		covariance_blocks.emplace_back(c.second.RadialDistortion + 2, c.second.TangentialDistortion);
-		if (_ThermalFlag == true)
-		{
-			covariance_blocks.emplace_back(c.second.InternalOrientation, _Thermal);
-			covariance_blocks.emplace_back(c.second.RadialDistortion, _Thermal);
-			covariance_blocks.emplace_back(c.second.RadialDistortion + 2, _Thermal);
-			covariance_blocks.emplace_back(c.second.TangentialDistortion, _Thermal);
-		}
-
 	}
 
 
 
 	std::cout << "covariance estimation..." << std::endl;
-	//7. Covariance estimation
+	//6. Covariance estimation
 	CHECK(covariance.Compute(covariance_blocks, &Problem));
 
-	//8. Calculating sigma0
+	//7. Calculating sigma0
 	Sigma02 = 2 * total_cost / (Summary.num_residuals - Summary.num_parameters);
 
 	if (Sigma02 > 100)
@@ -447,7 +348,7 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 	}
 
 	std::cout << "extracting covariance values..." << std::endl;
-	//9. Extraction of covariance values
+	//8. Extraction of covariance values
 	for (auto &i : BAData.ImageOrientationData.DataImages)
 	{
 		double cov_coords[9] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
@@ -489,13 +390,6 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 			c.second.TangentialDistortionStdDev[0] = std::sqrt(cov_tangential[0] * Sigma02);
 			c.second.TangentialDistortionStdDev[1] = std::sqrt(cov_tangential[3] * Sigma02);
 		}
-	}
-	if (_ThermalFlag)
-	{
-		double cov_thermal[4] = { 0.0, 0.0, 0.0, 0.0 };
-		covariance.GetCovarianceBlock(_Thermal, _Thermal, cov_thermal);
-		_ThermalStdDev[0] = std::sqrt(cov_thermal[0] * Sigma02);
-		_ThermalStdDev[1] = std::sqrt(cov_thermal[3] * Sigma02);
 	}
 
 	std::cout << "calculating Pearsons corelations..." << std::endl;
@@ -664,100 +558,6 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 			p = std::make_pair(BAAddParam::P1, BAAddParam::P2); corelcontainer.emplace(p, 0.0);
 		}
 
-		if (_ThermalFlag == false)
-		{
-			CorelationsCamparams.emplace(c.first, corelcontainer);
-			continue;
-		}
-
-		if (covariance.GetCovarianceBlock(c.second.InternalOrientation, _Thermal, cb6))
-		{
-			p = std::make_pair(BAAddParam::CK, BAAddParam::TX); cor = Sigma02 * cb6[0] / (c.second.InternalOrientationStdDev[0] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::CK, BAAddParam::TZ); cor = Sigma02 * cb6[1] / (c.second.InternalOrientationStdDev[0] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::X0, BAAddParam::TX); cor = Sigma02 * cb6[2] / (c.second.InternalOrientationStdDev[1] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::X0, BAAddParam::TZ); cor = Sigma02 * cb6[3] / (c.second.InternalOrientationStdDev[1] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::Y0, BAAddParam::TX); cor = Sigma02 * cb6[4] / (c.second.InternalOrientationStdDev[2] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::Y0, BAAddParam::TZ); cor = Sigma02 * cb6[5] / (c.second.InternalOrientationStdDev[2] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-		}
-		else
-		{
-			p = std::make_pair(BAAddParam::CK, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::CK, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::X0, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::X0, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::Y0, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::Y0, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-		}
-
-		if (covariance.GetCovarianceBlock(c.second.RadialDistortion, _Thermal, cb4))
-		{
-			p = std::make_pair(BAAddParam::K1, BAAddParam::TX); cor = Sigma02 * cb4[0] / (c.second.RadialDistortionStdDev[0] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::K1, BAAddParam::TZ); cor = Sigma02 * cb4[1] / (c.second.RadialDistortionStdDev[0] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::K2, BAAddParam::TX); cor = Sigma02 * cb4[2] / (c.second.RadialDistortionStdDev[1] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::K2, BAAddParam::TZ); cor = Sigma02 * cb4[3] / (c.second.RadialDistortionStdDev[1] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-
-		}
-		else
-		{
-			p = std::make_pair(BAAddParam::K1, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::K1, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::K2, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::K2, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-		}
-
-		if (covariance.GetCovarianceBlock(c.second.RadialDistortion + 2, _Thermal, cb2))
-		{
-			p = std::make_pair(BAAddParam::K3, BAAddParam::TX); cor = Sigma02 * cb2[0] / (c.second.RadialDistortionStdDev[2] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::K3, BAAddParam::TZ); cor = Sigma02 * cb2[1] / (c.second.RadialDistortionStdDev[2] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-		}
-		else
-		{
-			p = std::make_pair(BAAddParam::K3, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::K3, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-		}
-
-		if (covariance.GetCovarianceBlock(c.second.TangentialDistortion, _Thermal, cb4))
-		{
-			p = std::make_pair(BAAddParam::P1, BAAddParam::TX); cor = Sigma02 * cb4[0] / (c.second.TangentialDistortionStdDev[0] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::P1, BAAddParam::TZ); cor = Sigma02 * cb4[1] / (c.second.TangentialDistortionStdDev[0] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::P2, BAAddParam::TX); cor = Sigma02 * cb4[2] / (c.second.TangentialDistortionStdDev[1] * _ThermalStdDev[0]);
-			corelcontainer.emplace(p, cor);
-			p = std::make_pair(BAAddParam::P2, BAAddParam::TZ); cor = Sigma02 * cb4[3] / (c.second.TangentialDistortionStdDev[1] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-		}
-		else
-		{
-			p = std::make_pair(BAAddParam::P1, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::P1, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::P2, BAAddParam::TX); corelcontainer.emplace(p, 0.0);
-			p = std::make_pair(BAAddParam::P2, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-		}
-
-
-		if (covariance.GetCovarianceBlock(_Thermal, _Thermal, cb4))
-		{
-			p = std::make_pair(BAAddParam::TX, BAAddParam::TZ); cor = Sigma02 * cb4[1] / (_ThermalStdDev[0] * _ThermalStdDev[1]);
-			corelcontainer.emplace(p, cor);
-		}
-		else
-		{
-			p = std::make_pair(BAAddParam::TX, BAAddParam::TZ); corelcontainer.emplace(p, 0.0);
-		}
-
 
 		CorelationsCamparams.emplace(c.first, corelcontainer);
 	}
@@ -779,42 +579,13 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 		}
 	}
 	
-	if (_ThermalFlag == true)
-	{
-
-		std::cout << "thermal std. dev. = [ " << std::fixed << std::setprecision(7) << _ThermalStdDev[0] << " " << _ThermalStdDev[1] << "]" << std::endl;
-
-		std::cout << "\ncorelations of thermal coefficients:\n";
-		for (const auto &c : BAData.ImageOrientationData.DataCameras)
-		{
-			std::cout << "camera: " << c.first << std::endl;
-			std::cout << "ck : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::CK, BAAddParam::TX)) << std::endl;
-			std::cout << "x0 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::X0, BAAddParam::TX)) << std::endl;
-			std::cout << "y0 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::Y0, BAAddParam::TX)) << std::endl;
-			std::cout << "k1 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::K1, BAAddParam::TX)) << std::endl;
-			std::cout << "k2 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::K2, BAAddParam::TX)) << std::endl;
-			std::cout << "k3 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::K3, BAAddParam::TX)) << std::endl;
-			std::cout << "p1 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::P1, BAAddParam::TX)) << std::endl;
-			std::cout << "p2 : TX :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::P2, BAAddParam::TX)) << std::endl;
-			std::cout << "ck : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::CK, BAAddParam::TZ)) << std::endl;
-			std::cout << "x0 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::X0, BAAddParam::TZ)) << std::endl;
-			std::cout << "y0 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::Y0, BAAddParam::TZ)) << std::endl;
-			std::cout << "k1 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::K1, BAAddParam::TZ)) << std::endl;
-			std::cout << "k2 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::K2, BAAddParam::TZ)) << std::endl;
-			std::cout << "k3 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::K3, BAAddParam::TZ)) << std::endl;
-			std::cout << "p1 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::P1, BAAddParam::TZ)) << std::endl;
-			std::cout << "p2 : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::P2, BAAddParam::TZ)) << std::endl;
-			std::cout << "TX : TZ :  " << CorelationsCamparams.at(c.first).at(std::make_pair(BAAddParam::TX, BAAddParam::TZ)) << std::endl;
-		}
-
-	}
 
 	//EXTRACTING RESIDUALS
 	std::cout << "writing residuals..." << std::endl;
 	std::cout << "number of residuals: " << residuals.size() <<std::endl;
 
 	
-	size_t i = 0;
+	size_t i{ 0 };
 	for (auto& p : BAData.ImagePoints.Data)
 	{
 		p.VX = residuals.at(i);//*p.MX;
@@ -866,8 +637,23 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 		}
 	}
 	
+	//extracting residuals for projection centers
+	for (auto & imageData : BAData.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedPosition) continue;
+		imageData.second.CoordsResiduals[0] = residuals.at(i++)*imageData.second.EOObserved.CoordsErrorsApriori[0];
+		imageData.second.CoordsResiduals[1] = residuals.at(i++)*imageData.second.EOObserved.CoordsErrorsApriori[1];
+		imageData.second.CoordsResiduals[2] = residuals.at(i++)*imageData.second.EOObserved.CoordsErrorsApriori[2];
+	}
 
-
+	//extracting residuals for angles
+	for (auto & imageData : BAData.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedOrientation) continue;
+		imageData.second.AnglesResiduals[0] = residuals.at(i++)*imageData.second.EOObserved.AnglesErrorsApriori[0];
+		imageData.second.AnglesResiduals[1] = residuals.at(i++)*imageData.second.EOObserved.AnglesErrorsApriori[1];
+		imageData.second.AnglesResiduals[2] = residuals.at(i++)*imageData.second.EOObserved.AnglesErrorsApriori[2];
+	}
 
 	//we have to scale residuals because we have weighted the equations! :
 	for (auto& p : BAData.ImagePoints.Data)
@@ -888,13 +674,14 @@ BundleAdjustment::BundleAdjustment(BundleAdjustmentData &BAData)
 		}
 	}
 
-
+	
 	//estimation of the reverse distortion
 	for (auto &c : BAData.ImageOrientationData.DataCameras)
 	{
 		ReverseDistortions.emplace(c.first, c.second);
 	}
 
+	std::cout << "Your bundle adjustment completed! See report." << std::endl;
 }
 
 

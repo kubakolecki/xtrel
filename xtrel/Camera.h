@@ -31,12 +31,12 @@ public:
 	std::string LensName{ "" };
 	std::string LensSerialNumber{""};
 
-	double getRadialCorrectionX(double x, double y);
-	double getRadialCorrectionY(double x, double y);
-	double getTangentialCorrectionX(double x, double y);
-	double getTangentialCorrectionY(double x, double y);
-	double getTotalDistortionCorrectionX(double x, double y);
-	double getTotalDistortionCorrectionY(double x, double y);
+	double getRadialCorrectionX(double x, double y) const noexcept;
+	double getRadialCorrectionY(double x, double y) const noexcept;
+	double getTangentialCorrectionX(double x, double y) const noexcept;
+	double getTangentialCorrectionY(double x, double y) const noexcept;
+	double getTotalDistortionCorrectionX(double x, double y) const noexcept;
+	double getTotalDistortionCorrectionY(double x, double y) const noexcept;
 
 	void scale();
 	void scale_back();

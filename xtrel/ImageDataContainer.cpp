@@ -15,6 +15,22 @@ bool ImageDataContainer::read_from_file(std::string filename )
 	DataCameras.clear();
 	DataImages.clear();
 	std::ifstream str;
+	bool containsObsFlags{ false };
+	str.open(filename);
+	if (str)
+	{
+		std::string line;
+		std::getline(str, line);
+		containsObsFlags = (line == "eofile_v20210309");
+	}
+	else
+	{
+		std::cout << "cannot open " << filename << std::endl;
+		str.close();
+		return false;
+	}
+	str.close();
+	
 	str.open(filename);
 	if (str)
 	{
@@ -26,8 +42,13 @@ bool ImageDataContainer::read_from_file(std::string filename )
 		string parametrization{ "" };
 		string camera_file_name{ "" };
 		int use{ 1 };
-
-
+		int observedPosition{ 0 };
+		int observedOrientation{ 0 };
+		string firstline{""};
+		if (containsObsFlags)
+		{
+			str >> firstline;
+		}
 		while (str)
 		{
 			if (str)
@@ -35,8 +56,12 @@ bool ImageDataContainer::read_from_file(std::string filename )
 				str >> name >> coords[0] >> coords[1] >> coords[2]
 					>> angles[0] >> angles[1] >> angles[2]
 					>> cerrors[0] >> cerrors[1] >> cerrors[2]
-					>> aerrors[0] >> aerrors[1] >> aerrors[2]
-					>> parametrization
+					>> aerrors[0] >> aerrors[1] >> aerrors[2];
+				if (containsObsFlags)
+				{
+					str >> observedPosition >> observedOrientation;
+				}
+				str	>> parametrization
 					>> camera_file_name
 					>> use;
 
@@ -50,11 +75,20 @@ bool ImageDataContainer::read_from_file(std::string filename )
  
 				Camera cam(camera_file_name.c_str());
 				EO eo(coords, angles, cerrors, aerrors);
-				ImageData imagedata(eo, name, camera_file_name, cam.Name);
-				imagedata.EOApproximated.RotParametrization = parametrization;
 
+				if (containsObsFlags)
+				{
+					ImageData imagedata(eo, name, observedPosition, observedOrientation, camera_file_name, cam.Name);
+					imagedata.EOApproximated.RotParametrization = parametrization;
+					DataImages.emplace(name, imagedata);
+				}
+				else
+				{
+					ImageData imagedata(eo, name, camera_file_name, cam.Name);
+					imagedata.EOApproximated.RotParametrization = parametrization;
+					DataImages.emplace(name, imagedata);
+				}
 				DataCameras.emplace(cam.Name, cam);
-				DataImages.emplace(name, imagedata);
 			}
 		}
 	}

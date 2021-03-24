@@ -62,7 +62,7 @@ namespace ba
 
 			if (Settings.MathModel == BAMathModel::TIGHT)
 			{
-				res = res&& GeodeticAngularMeasurements.read_from_file(Settings.InputFiles.FilenameGeodeticMeasurements);
+				res = res && GeodeticAngularMeasurements.read_from_file(Settings.InputFiles.FilenameGeodeticMeasurements);
 				res = res && GeodeticControllPoints.read_from_file(Settings.InputFiles.FilenameGeodeticClotrollPoints);
 			}
 
@@ -256,9 +256,16 @@ namespace ba
 					p.MY = Settings.ImageMesAcc;
 				}
 				
+				//counting controll points
+				NumOfControllPoints = std::count_if(ObjectPoints.Data.begin(), ObjectPoints.Data.end(),
+					[](const std::pair<const std::string, TerrainPoint>& point) {return point.second.Type == 3; });
+				//counting tie points
+				NumOfTiePoints = std::count_if(ObjectPoints.Data.begin(), ObjectPoints.Data.end(),
+					[](const std::pair<const std::string, TerrainPoint>& point) {return point.second.Type == 0; });
+
 				NumOfImages = ImageOrientationData.DataImages.size();
 				NumOfCameras = ImageOrientationData.DataCameras.size();
-				NumOfControllPoints = ObjectPoints.Data.size();
+				//NumOfControllPoints = ObjectPoints.Data.size();
 				NumOfImagePoints = ImagePoints.Data.size();
 				NumOfCheckPoints = CheckPoints.Data.size();
 			}

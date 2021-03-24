@@ -90,6 +90,15 @@
     <ClInclude Include="ResidualProjectionObjPtThermal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RayIntersectionCheck.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResidualOrientationEuler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ResidualProjectionCenter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -144,6 +153,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xtrel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RayIntersectionCheck.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

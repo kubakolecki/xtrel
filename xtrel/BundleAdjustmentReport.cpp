@@ -1,5 +1,7 @@
 #include "pch.h"
+#include "photogrammetry.h"
 #include "BundleAdjustmentReport.h"
+#include "RayIntersectionCheck.h"
 
 using namespace ba;
 
@@ -92,7 +94,8 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 	str << "***************************************************** ESTIMATES *****************************************************\n";
 	str << "*********************************************************************************************************************\n";
 
-	str << "\nEstimated variance of unit weight: " <<fixed <<setprecision(4) << ba.Sigma02 <<  std::endl;
+	str << "\nEstimated variance of unit weight: " <<fixed <<setprecision(4) << ba.Sigma02 << "[-]"<< std::endl;
+	str << "Square root of  variance of unit weight (sigma0): " << fixed << setprecision(4) << std::sqrt(ba.Sigma02) << "[-]" << std::endl;
 
 	str << "\nCamera parameters (internal orientation and distortion) after estimation:\n";
 
@@ -439,6 +442,7 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 		}
 		str << std::endl;
 
+
 		for (int j = c.second.H / 2; j > -c.second.H/2; j -= step_y)
 		{
 			str << setw(15) << " ";
@@ -547,9 +551,47 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 		str << std::setw(15) << "P1" << " " << std::setw(10) << 1.00000 << " " << std::setw(10) << c_p1_p2 <<"\n";
 		str << std::setw(15) << "P2" << " " << std::setw(10) << c_p1_p2 << " " << std::setw(10) << 1.00000 <<std::endl;
 
+		str << "\nProjection to image plane: 10 X 10 grid of points - to compare several variants of calibration.";
+		str << "\nAll external orientation parameters are set to zero.";
+		{
+			double f_in_px = c.second.LensNominalFocalLength / c.second.PixelSize;
+			double xmin = 0.9 * (-c.second.W / 2.0);
+			double ymin = 0.9 * (-c.second.H / 2.0);
+			double xstep = 0.9 * (c.second.W / 10.0);
+			double ystep = 0.9 * (c.second.H / 10.0);
+			double coords[3] = { 0.0,0.0,0.0 };
+			double r[9] = { 1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0 };
+			//x coordinate:
+			str << "\nx[px]:\n";
+			for (unsigned int i = 0; i <= 10; i++) //changing y
+			{
+				for (unsigned int j = 0; j <= 10; j++) //changing x
+				{
+					double op[3] = { xmin + j * xstep, ymin + i * ystep, -f_in_px };
+					double p[2];
+					fT_projection(op, coords, r, c.second.InternalOrientation, c.second.RadialDistortion, c.second.TangentialDistortion, p);
+					str << fixed << setprecision(2) << p[0];
+					if (j < 10) str << " ";
+					else str << "\n";
 
+				}	
+			}
+			//y coordinate:
+			str << "\ny[px]:\n";
+			for (unsigned int i = 0; i <= 10; i++) //changing y
+			{
+				for (unsigned int j = 0; j <= 10; j++) //changing x
+				{
+					double op[3] = { xmin + j * xstep, ymin + i * ystep, -f_in_px };
+					double p[2];
+					fT_projection(op, coords, r, c.second.InternalOrientation, c.second.RadialDistortion, c.second.TangentialDistortion, p);
+					str << fixed << setprecision(2) << p[1];
+					if (j < 10) str << " ";
+					else str << "\n";
+				}
+			}
+		}
 	}
-
 
 
 	str << "\nEstimated external orientation parameters of images:\n";
@@ -596,8 +638,8 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 		<< std::fixed << std::setprecision(5) << std::setw(10) << "Y0" << " "
 		<< std::fixed << std::setprecision(5) << std::setw(10) << "Z0" << " "
 		<< std::fixed << std::setprecision(5) << std::setw(13) << "std.dev.X0" << " "
-		<< std::fixed << std::setprecision(5) << std::setw(13) << "std.dev.X0" << " "
-		<< std::fixed << std::setprecision(5) << std::setw(13) << "std.dev.X0" << std::endl;
+		<< std::fixed << std::setprecision(5) << std::setw(13) << "std.dev.Y0" << " "
+		<< std::fixed << std::setprecision(5) << std::setw(13) << "std.dev.Z0" << std::endl;
 	for (auto& i : badata.ImageOrientationData.DataImages)
 	{
 		str << std::setw(5) << lp <<" "
@@ -644,6 +686,18 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 		lp++;
 	}
 
+	str << "\nExternal orientation, list:\n";
+	for (auto& i : badata.ImageOrientationData.DataImages)
+	{
+		str << i.second.Name << " ";
+		str << std::fixed << std::setprecision(5)  << i.second.EOApproximated.Coords[0] << " ";
+		str << std::fixed << std::setprecision(5)  << i.second.EOApproximated.Coords[1] << " ";
+		str << std::fixed << std::setprecision(5)  << i.second.EOApproximated.Coords[2] << " ";
+		str << std::fixed << std::setprecision(6)  << rho * i.second.EOApproximated.Angles[0] << " ";
+		str << std::fixed << std::setprecision(6)  << rho * i.second.EOApproximated.Angles[1] << " ";
+		str << std::fixed << std::setprecision(6)  << rho * i.second.EOApproximated.Angles[2] << "\n";
+	}
+
 	if (badata.Settings.MathModel == BAMathModel::SOFT || badata.Settings.MathModel == BAMathModel::TIGHT)
 	{
 		str << "\nEstimated coordinates of object points:\n";
@@ -664,11 +718,11 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 	sorted_image_points.reserve(badata.ImagePoints.Data.size());
 	sorted_object_points.reserve(badata.ObjectPointsMeasurements.Data.size());
 	//local copy form map to vector
-	for (auto &p : badata.ImagePoints.Data)
+	for (const auto &p : badata.ImagePoints.Data)
 	{
 		sorted_image_points.push_back(p);
 	}
-	for (auto &p : badata.ObjectPointsMeasurements.Data)
+	for (const auto &p : badata.ObjectPointsMeasurements.Data)
 	{
 		sorted_object_points.push_back(p.second);
 	}
@@ -687,10 +741,27 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 	});
 
 	str << "\n*********************************************************************************************************************\n";
+	str << "************************************** OBJECT POINTS - INTERSECTION OF RAYS *****************************************\n";
+	str << "*********************************************************************************************************************\n";
+
+	//TODO: fix computation of ray intersection
+	/*
+	for (const auto &op : badata.ObjectPoints.Data)
+	{
+		//selecting image point measurements
+		std::vector<ImagePoint> imagePoints;
+		for (const auto &ip : badata.ImagePoints.Data) if (op.second.Name == ip.Name) imagePoints.push_back(ip);
+		if (imagePoints.size() == 0ull) continue;
+		RayIntersectionCheck rayCheck(op.second, imagePoints, badata.ImageOrientationData);
+	}
+	*/
+
+
+	str << "\n*********************************************************************************************************************\n";
 	str << "****************************************************** CHECK POINTS *************************************************\n";
 	str << "*********************************************************************************************************************\n";
 
-	str << "\nDifferences in check point coordinates (given - estimated), sroted:\n";
+	str << "\nDifferences in check point coordinates (given - estimated), sorted:\n";
 	str << setw(12) <<"Id" <<" "
 		<< setw(12) << "DX" << " "
 		<< setw(12) << "DY" << " "
@@ -854,6 +925,36 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 			" " <<std::fixed << std::setprecision(3) <<std::setw(9) << p.VX <<" " << std::setw(9) << p.VY <<" " << std::setw(9) << std::sqrt(p.VX*p.VX + p.VY*p.VY) << std::endl;
 	}
 
+	str << "\nResiduals of coordinates of projection centers: " << std::endl;
+	str << std::setw(10) << "image_id" << " " << std::setw(9) << "vX" << " " << std::setw(9) << "vY" << " " << std::setw(9) << "vZ\n";
+	for (const auto &imageData : badata.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedPosition) continue;
+		str << std::setw(10) << imageData.first << " " <<std::fixed <<std::setprecision(5) << std::setw(9) << imageData.second.CoordsResiduals[0] << " " << std::setw(9) << imageData.second.CoordsResiduals[1] << " " << std::setw(9) << imageData.second.CoordsResiduals[2] << "\n";
+	}
+
+
+	str << "\nResiduals of orientation of images: " << std::endl;
+	str	<< std::setw(10) << "image_id" << " "
+		<< std::setw(18) << "parametrization"
+		<< std::fixed << std::setprecision(5) << std::setw(12) << "Va1[deg]" << " "
+		<< std::fixed << std::setprecision(5) << std::setw(12) << "Va2[deg]" << " "
+		<< std::fixed << std::setprecision(5) << std::setw(12) << "Va3[deg]" << " "
+		<< std::fixed << std::setprecision(1) << std::setw(17) << "Va1[\"]" << " "
+		<< std::fixed << std::setprecision(1) << std::setw(17) << "Va2[\"]" << " "
+		<< std::fixed << std::setprecision(1) << std::setw(17) << "Va3[\"]" << " "
+		<< std::endl;
+	for (const auto &imageData : badata.ImageOrientationData.DataImages)
+	{
+		
+		if (!imageData.second.observedOrientation) continue;
+		str << std::setw(10) <<  imageData.first << " " << std::setw(18) << imageData.second.EOObserved.RotParametrization;
+		str << std::fixed << std::setprecision(5);
+		str << std::setw(12) << imageData.second.AnglesResiduals[0] << " " << std::setw(12) << imageData.second.AnglesResiduals[1] << " " << std::setw(12) << imageData.second.AnglesResiduals[2] << " ";
+		str << std::fixed << std::setprecision(1);
+		str << std::setw(17) << 3600 * rho * imageData.second.AnglesResiduals[0] << " " << std::setw(17) << 3600 * rho *imageData.second.AnglesResiduals[1] << " " << std::setw(17) << 3600 * rho * imageData.second.AnglesResiduals[2] << " \n";
+		
+	}
 
 	if (badata.Settings.MathModel == BAMathModel::SOFT)
 	{
