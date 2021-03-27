@@ -3,6 +3,8 @@
 #include "BundleAdjustmentReport.h"
 #include "RayIntersectionCheck.h"
 
+#include <tuple>
+
 using namespace ba;
 
 BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, BundleAdjustment& ba, const std::string& filename)
@@ -68,12 +70,12 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 	str << "*********************************************** INPUT DATA STATISTICS ***********************************************\n";
 	str << "*********************************************************************************************************************\n";
 
-	str << "Number of images: " << badata.NumOfImages << std::endl;
-	str << "Number of camreas: " << badata.NumOfCameras << std::endl;
-	str << "Number of controll points: " << badata.NumOfControllPoints << std::endl;
-	str << "Number of tie points: " << badata.NumOfTiePoints << std::endl;
-	str << "Number of check points: " << badata.NumOfCheckPoints << std::endl;
-	str << "Number of image points: " << badata.NumOfImagePoints << std::endl;
+	str << "Number of images          : " <<std::setw(9) << badata.NumOfImages << std::endl;
+	str << "Number of camreas         : " <<std::setw(9) << badata.NumOfCameras << std::endl;
+	str << "Number of controll points : " <<std::setw(9) << badata.NumOfControllPoints << std::endl;
+	str << "Number of tie points      : " <<std::setw(9) << badata.NumOfTiePoints << std::endl;
+	str << "Number of check points    : " <<std::setw(9) << badata.NumOfCheckPoints << std::endl;
+	str << "Number of image points    : " <<std::setw(9) << badata.NumOfImagePoints << std::endl;
 
 	str << "\nCameras assignments and number of points:\n";
 	str << setw(12) << "image_name:" << " " << setw(40) << "camera_name:" << " " << setw(16) << "#image_points" << std::endl;
@@ -740,12 +742,14 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 				p2.V[0] * p2.V[0] + p2.V[1] * p2.V[1] + p2.V[2] * p2.V[2];
 	});
 
+
+	//TODO: fix computation of ray intersection
+	/*
 	str << "\n*********************************************************************************************************************\n";
 	str << "************************************** OBJECT POINTS - INTERSECTION OF RAYS *****************************************\n";
 	str << "*********************************************************************************************************************\n";
 
-	//TODO: fix computation of ray intersection
-	/*
+
 	for (const auto &op : badata.ObjectPoints.Data)
 	{
 		//selecting image point measurements
@@ -913,6 +917,72 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 			std::setw(12) << 3600 * rho*rmsehzv[1]<< " " << std::setw(12) << 10000 * rhog*rmsehzv[1] << std::endl;
 	}
 
+	//generating and sorting projection center resisuals, caluclating projeciton center RMSE
+	std::vector<std::pair<std::string, std::array<double, 5>>> projectionCenterResiduals; //[image_id [VX VY VZ VXY VXYZ]]
+	std::array<double, 5> projectionCenterRMSE{ 0.0, 0.0, 0.0, 0.0, 0.0 };
+	int numberOfObservedProjectionCenterCoordinates{ 0 };
+	for (const auto &imageData : badata.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedPosition) continue;
+		numberOfObservedProjectionCenterCoordinates++;
+		std::array<double, 5> residuals{ imageData.second.CoordsResiduals[0], imageData.second.CoordsResiduals[1], imageData.second.CoordsResiduals[2],
+		std::sqrt(imageData.second.CoordsResiduals[0] * imageData.second.CoordsResiduals[0] + imageData.second.CoordsResiduals[1] * imageData.second.CoordsResiduals[1]),
+		std::sqrt(imageData.second.CoordsResiduals[0] * imageData.second.CoordsResiduals[0] + imageData.second.CoordsResiduals[1] * imageData.second.CoordsResiduals[1] + imageData.second.CoordsResiduals[2] * imageData.second.CoordsResiduals[2]) };
+		for (int i : {0, 1, 2, 3, 4}) projectionCenterRMSE[i] += residuals[i] * residuals[i];
+		projectionCenterResiduals.emplace_back(std::pair<std::string, std::array<double, 5>>(imageData.first, residuals));
+	}
+	std::sort(projectionCenterResiduals.begin(), projectionCenterResiduals.end(), [](const std::pair<std::string, std::array<double, 5>>& r1, const std::pair<std::string, std::array<double, 5>>& r2)
+	{
+		return r1.second[4] > r2.second[4];
+	});
+	std::transform(projectionCenterRMSE.begin(), projectionCenterRMSE.end(), projectionCenterRMSE.begin(), [&badata](double& val) {
+		val /= (badata.ImageOrientationData.DataImages.size() - 1);
+		return sqrt(val);
+	});
+
+	//sorting orientation residuals by angular component of axis-angle representaiton
+	std::vector<std::tuple<std::string, std::string, const ImageData*, double> > angleResiduals;
+	std::array<double, 4> orientationRMSE{ 0.0, 0.0, 0.0, 0.0 };
+	int numberOfObservedAngularOrientation{ 0 };
+	for (const auto &imageData : badata.ImageOrientationData.DataImages)
+	{
+		if (!imageData.second.observedOrientation) continue;
+		numberOfObservedAngularOrientation++;
+		double R[9];
+		fT_angles2rot(imageData.second.AnglesResiduals, R, imageData.second.EOObserved.RotParametrization);
+		//std::acos(0.5*(R[0] + R[4] + R[8] - 1.0)) provides the angle of axis and angle representation
+		double absoluteAngle{ std::abs(std::acos(0.5*(R[0] + R[4] + R[8] - 1.0))) };
+		angleResiduals.emplace_back(std::make_tuple(imageData.first, imageData.second.EOObserved.RotParametrization, &imageData.second, absoluteAngle));
+		for (int i : {0, 1, 2}) orientationRMSE[i] += imageData.second.AnglesResiduals[i] * imageData.second.AnglesResiduals[i];
+		orientationRMSE[3] += absoluteAngle * absoluteAngle;
+	}
+	std::sort(angleResiduals.begin(), angleResiduals.end(), [](const std::tuple<std::string, std::string, const ImageData*, double>& t1, std::tuple<std::string, std::string, const ImageData*, double>& t2)
+	{
+		return std::get<3>(t1) > std::get<3>(t2);
+	});
+	std::transform(orientationRMSE.begin(), orientationRMSE.end(), orientationRMSE.begin(), [&badata](double& val) {
+		val /= (badata.ImageOrientationData.DataImages.size() - 1);
+		return sqrt(val);
+	});
+
+	str << "\nRMSE of observed external orientaiton:\n";
+	str << "Number of images with observed projection center coordinates: " << numberOfObservedProjectionCenterCoordinates << "\n";
+	str << "Number of images with observed angles: " << numberOfObservedAngularOrientation << "\n";
+	str << "\nRMSE of projection center coordinates:\n";
+	str << std::fixed << std::setprecision(5);
+	str << "RMSE X  : " <<setw(13)<< projectionCenterRMSE[0] << "\n";
+	str << "RMSE Y  : " <<setw(13)<< projectionCenterRMSE[1] << "\n";
+	str << "RMSE Z  : " <<setw(13)<< projectionCenterRMSE[2] << "\n";
+	str << "RMSE XY : " <<setw(13)<< projectionCenterRMSE[3] << "\n";
+	str << "RMSE XYZ: " <<setw(13)<< projectionCenterRMSE[4] << "\n";
+
+	str << "\nRMSE of angles:\n";
+	str << std::fixed;
+	str << "RMSE Angle1        : " << setprecision(5) << setw(13) << orientationRMSE[0] << " [deg]   = " << setprecision(1) << setw(10) << 3600 * rho * orientationRMSE[0] << " [\"]\n";
+	str << "RMSE Angle2        : " << setprecision(5) << setw(13) << orientationRMSE[1] << " [deg]   = " << setprecision(1) << setw(10) << 3600 * rho * orientationRMSE[1] << " [\"]\n";
+	str << "RMSE Angle3        : " << setprecision(5) << setw(13) << orientationRMSE[2] << " [deg]   = " << setprecision(1) << setw(10) << 3600 * rho * orientationRMSE[2] << " [\"]\n";
+	str << "RMSE Absolute Angle: " << setprecision(5) << setw(13) << orientationRMSE[3] << " [deg]   = " << setprecision(1) << setw(10) << 3600 * rho * orientationRMSE[3] << " [\"]\n";
+
 	str << "\n*********************************************************************************************************************\n";
 	str << "***************************************************** RESIDUALS *****************************************************\n";
 	str << "*********************************************************************************************************************\n";
@@ -925,34 +995,38 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 			" " <<std::fixed << std::setprecision(3) <<std::setw(9) << p.VX <<" " << std::setw(9) << p.VY <<" " << std::setw(9) << std::sqrt(p.VX*p.VX + p.VY*p.VY) << std::endl;
 	}
 
-	str << "\nResiduals of coordinates of projection centers: " << std::endl;
-	str << std::setw(10) << "image_id" << " " << std::setw(9) << "vX" << " " << std::setw(9) << "vY" << " " << std::setw(9) << "vZ\n";
-	for (const auto &imageData : badata.ImageOrientationData.DataImages)
+
+	//printing residuals of extarnal orientation parameters
+	str << "\nResiduals of coordinates of projection centers, sorted by VXZY: " << std::endl;
+	str << std::setw(10) << "image_id" << " " << std::setw(9) << "VX" << " " << std::setw(9) << "VY" << " " << std::setw(9) << "VZ" << " " << std::setw(9) << "VXY" << " " << std::setw(9) << "VXYZ\n";
+	for (const auto &resData : projectionCenterResiduals)
 	{
-		if (!imageData.second.observedPosition) continue;
-		str << std::setw(10) << imageData.first << " " <<std::fixed <<std::setprecision(5) << std::setw(9) << imageData.second.CoordsResiduals[0] << " " << std::setw(9) << imageData.second.CoordsResiduals[1] << " " << std::setw(9) << imageData.second.CoordsResiduals[2] << "\n";
+		str << std::setw(10) << resData.first << " ";
+		str << std::fixed << std::setprecision(5) << std::setw(9) << resData.second[0] << " " << std::setw(9) << resData.second[1] << " " << std::setw(9) << resData.second[2] << " ";
+		str << std::fixed << std::setprecision(5) << std::setw(9) << resData.second[3] << " " << std::setw(9) << resData.second[4] << "\n";
 	}
 
 
-	str << "\nResiduals of orientation of images: " << std::endl;
+	str << "\nResiduals of orientation of images.";
+	str << "\nSorted by absoulute angle residual derived from rotation marix R: arccos(0.5*(trace(R) - 1.0)):" << std::endl;
 	str	<< std::setw(10) << "image_id" << " "
-		<< std::setw(18) << "parametrization"
-		<< std::fixed << std::setprecision(5) << std::setw(12) << "Va1[deg]" << " "
-		<< std::fixed << std::setprecision(5) << std::setw(12) << "Va2[deg]" << " "
-		<< std::fixed << std::setprecision(5) << std::setw(12) << "Va3[deg]" << " "
-		<< std::fixed << std::setprecision(1) << std::setw(17) << "Va1[\"]" << " "
-		<< std::fixed << std::setprecision(1) << std::setw(17) << "Va2[\"]" << " "
-		<< std::fixed << std::setprecision(1) << std::setw(17) << "Va3[\"]" << " "
+		<< std::setw(18) << "parametrization" <<" "
+		<< std::setw(12) << "Va1[deg]" << " "
+		<< std::setw(12) << "Va2[deg]" << " "
+		<< std::setw(12) << "Va3[deg]" << " "
+		<< std::setw(20) << "Abs.Angle[deg]" << " "
+		<< std::setw(17) << "Va1[\"]" << " "
+		<< std::setw(17) << "Va2[\"]" << " "
+		<< std::setw(17) << "Va3[\"]" << " "
+		<< std::setw(20) << "Abs.Angle[\"]" << " "
 		<< std::endl;
-	for (const auto &imageData : badata.ImageOrientationData.DataImages)
+	for (const auto &res : angleResiduals)
 	{
-		
-		if (!imageData.second.observedOrientation) continue;
-		str << std::setw(10) <<  imageData.first << " " << std::setw(18) << imageData.second.EOObserved.RotParametrization;
+		str << std::setw(10) << std::get<0>(res) << " " << std::setw(18) << std::get<1>(res) <<" ";
 		str << std::fixed << std::setprecision(5);
-		str << std::setw(12) << imageData.second.AnglesResiduals[0] << " " << std::setw(12) << imageData.second.AnglesResiduals[1] << " " << std::setw(12) << imageData.second.AnglesResiduals[2] << " ";
+		str << std::setw(12) << std::get<2>(res)->AnglesResiduals[0] << " " << std::setw(12) << std::get<2>(res)->AnglesResiduals[1] << " " << std::setw(12) << std::get<2>(res)->AnglesResiduals[2] << " "<< std::setw(20) << std::get<3>(res) <<" ";
 		str << std::fixed << std::setprecision(1);
-		str << std::setw(17) << 3600 * rho * imageData.second.AnglesResiduals[0] << " " << std::setw(17) << 3600 * rho *imageData.second.AnglesResiduals[1] << " " << std::setw(17) << 3600 * rho * imageData.second.AnglesResiduals[2] << " \n";
+		str << std::setw(17) << 3600 * rho * std::get<2>(res)->AnglesResiduals[0] << " " << std::setw(17) << 3600 * rho *std::get<2>(res)->AnglesResiduals[1] << " " << std::setw(17) << 3600 * rho * std::get<2>(res)->AnglesResiduals[2] << " "<< std::setw(20) << 3600 * rho * std::get<3>(res) << " \n";
 		
 	}
 

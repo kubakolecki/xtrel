@@ -30,3 +30,10 @@ void ImageData::setEOObserved(const EO & eo)
 {
 	EOObserved = eo;
 }
+
+void ImageData::setParametrization(const std::string & parametrization)
+{
+	EOApproximated.RotParametrization = parametrization;
+	EOObserved.RotParametrization = parametrization;
+	EOAdjusted.RotParametrization = parametrization;
+}

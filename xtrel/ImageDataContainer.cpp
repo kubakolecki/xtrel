@@ -79,13 +79,13 @@ bool ImageDataContainer::read_from_file(std::string filename )
 				if (containsObsFlags)
 				{
 					ImageData imagedata(eo, name, observedPosition, observedOrientation, camera_file_name, cam.Name);
-					imagedata.EOApproximated.RotParametrization = parametrization;
+					imagedata.setParametrization(parametrization);					
 					DataImages.emplace(name, imagedata);
 				}
 				else
 				{
 					ImageData imagedata(eo, name, camera_file_name, cam.Name);
-					imagedata.EOApproximated.RotParametrization = parametrization;
+					imagedata.setParametrization(parametrization);
 					DataImages.emplace(name, imagedata);
 				}
 				DataCameras.emplace(cam.Name, cam);

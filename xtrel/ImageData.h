@@ -24,6 +24,7 @@ public:
 	unsigned int NumOfPoints{ 0 };
 
 	void setEOObserved(const EO& eo);
+	void setParametrization(const std::string& parametrization);
 
 private:
 };
