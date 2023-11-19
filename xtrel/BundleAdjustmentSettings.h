@@ -3,13 +3,14 @@
 
 struct BAInputFiles
 {
-	std::string FilenameImagePoints;
-	std::string FilenameObjectPoints;
-	std::string FilenameGeodeticClotrollPoints;
-	std::string FilenameExternalOrientation;
-	std::string FilenameGeodeticMeasurements;
-	std::string FilenameReport;
-	std::string FilenameCalibrationCertificateData;
+	std::string FilenameImagePoints{ "" };
+	std::string FilenameObjectPoints{ "" };
+	std::string FilenameGeodeticClotrollPoints{ "" };
+	std::string FilenameExternalOrientation{ "" };
+	std::string FilenameGeodeticMeasurements{ "" };
+	std::string FilenameReport{ "" };
+	std::string FilenameCalibrationCertificateData{ "" };
+	std::string FilenameParmeterGroupPairs{ "" };
 };
 
 namespace ba_fix_masks
@@ -43,9 +44,12 @@ namespace ba
 		double GeodeticVMesAcc =  0.000078537; //horizontal angle measurement accuracy in radians
 		double GeodeticDistMesAcc = 0.002; //[m] distance measurement accuracy
 		double LossFunctionParameter = 2.0;
-		int GenerateCalibrationCertificate = 0;
-
-
+		int ComputeCorrelations{ 0 };
+		int ComputeRedundancy{ 0 };
+		int ComputeCovarianceBetweenParameterGroups{ 0 };
+		int GenerateCalibrationCertificate{ 0 };
+		
+		
 		BAMathModel MathModel = BAMathModel::SOFT;
 		BALossFunction LossFunction = BALossFunction::NONE;
 		std::map<std::string, unsigned char> CamFixMasks;
@@ -61,6 +65,8 @@ namespace ba
 			"LossFunction:",
 			"LossFunctionParameter:",
 			"CamFixMasks:",
+			"ComputeCorrelations:",
+			"ComputeRedundancy:",
 			"GenerateCalibrationCertificate:",
 			"FilenameImagePoints:",
 			"FilenameObjectPoints:",

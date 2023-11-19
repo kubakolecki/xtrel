@@ -13,8 +13,6 @@ int main(int argc, char **argv)
 {
 	ba::BundleAdjustmentData BAInputData;
 
-
-	//BAInputData.FilenameSettings = "PRJ\\phaseone_test\\settings1.yaml";
 	BAInputData.FilenameSettings = argv[1];
 
 	if (!BAInputData.read_data())
@@ -22,11 +20,6 @@ int main(int argc, char **argv)
 		std::cout << "error while reading data" <<std::endl;
 		std::cout << "exiting the application" << std::endl;
 		return -1;
-	}
-
-	for (auto &c : BAInputData.ImageOrientationData.DataCameras)
-	{
-		c.second.wypisz();
 	}
 
 	BAInputData.Settings.print_in_console();

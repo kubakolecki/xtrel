@@ -146,9 +146,40 @@ bool ba::BundleAdjustmentSettings::read_from_file(std::string filename)
 							m += (c - '0') & 1;
 						}
 						cameraname = cameraname.substr(0, cameraname.length() - 1);
-						CamFixMasks.emplace(cameraname, m);				
+						CamFixMasks.emplace(cameraname, m);
+						std::cout << "cameraname: " << cameraname <<" fixmask: "<< fixmask << std::endl;
 					}
 				}
+
+				if (tag == "ComputeCorrelations:")
+				{
+					sl >> ComputeCorrelations;
+				}
+
+				if (tag == "ComputeRedundancy:")
+				{
+					sl >> ComputeRedundancy;
+				}
+
+				if (tag == "ComputeCovarianceBetweenParameterGroups:")
+				{
+					sl >> ComputeCovarianceBetweenParameterGroups;
+				}
+
+				if (tag == "PathOfFileWithParmeterGroupPairs:")
+				{
+					if (!check_filename(line))
+					{
+						std::cout << "Error in " << tag << " string!" << std::endl;
+						std::cout << "Have you forgotten the quotation marks?" << std::endl;
+						std::cout << "Correct the error and rerun the application." << std::endl;
+						return false;
+					}
+					
+					InputFiles.FilenameParmeterGroupPairs = get_filename(line);
+				}
+
+
 				if (tag == "GenerateCalibrationCertificate:")
 				{
 					sl >> GenerateCalibrationCertificate;

@@ -56,7 +56,7 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 	str << "V angle measurement error: " << badata.Settings.GeodeticVMesAcc << " [rad]" << std::endl;
 
 	str << "\nCalibration masks: " << std::endl;
-	for (auto&s : badata.Settings.CamFixMasks)
+	for (const auto&s : badata.Settings.CamFixMasks)
 	{
 		str << "\nCamera: " << s.first << " Mask: " << (int)s.second << std::endl;
 		str << "which means:\n";
@@ -79,7 +79,7 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 
 	str << "\nCameras assignments and number of points:\n";
 	str << setw(12) << "image_name:" << " " << setw(40) << "camera_name:" << " " << setw(16) << "#image_points" << std::endl;
-	for (auto &i : badata.ImageOrientationData.DataImages)
+	for (const auto &i : badata.ImageOrientationData.DataImages)
 	{
 		str << setw(12) << i.second.Name << " " <<setw(40) << i.second.CameraName << " "<<setw(16) <<i.second.NumOfPoints << std::endl;
 	}
@@ -91,6 +91,7 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 
 	str << "\nSolver report:\n";
 	str << ba.FullReport;
+
 
 	str << "\n*********************************************************************************************************************\n";
 	str << "***************************************************** ESTIMATES *****************************************************\n";
@@ -496,62 +497,7 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 		str << "K" << "=" << "| " << fixed<< setprecision(3)<< setw(12) << 0.0 << " " << setw(12) << c.second.InternalOrientation[0] << " " <<setw(12) << c.second.H / 2 - c.second.InternalOrientation[2] - 0.5 << " |" << std::endl;
 		str << " " << " " << "| " << fixed << setprecision(3) << setw(12) <<0.0 << " " << setw(12) << 0.0 << " " << setw(12) << 1.0 << " |" << std::endl;
 	
-		str << "\nPearson correlation coefficients for camera parameters:" << std::endl;
-		str << "[nan(ind)] or [Inf] means: one of parameters was fixed."<<std::endl;
-		double c_ck_x0 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::X0));
-		double c_ck_y0 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::Y0));
-		double c_ck_k1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::K1));
-		double c_ck_k2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::K2));
-		double c_ck_k3 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::K3));
-		double c_ck_p1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::P1));
-		double c_ck_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::CK, ba::BAAddParam::P2));
 
-		double c_x0_y0 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::X0, ba::BAAddParam::Y0));
-		double c_x0_k1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::X0, ba::BAAddParam::K1));
-		double c_x0_k2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::X0, ba::BAAddParam::K2));
-		double c_x0_k3 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::X0, ba::BAAddParam::K3));
-		double c_x0_p1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::X0, ba::BAAddParam::P1));
-		double c_x0_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::X0, ba::BAAddParam::P2));
-
-		double c_y0_k1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::Y0, ba::BAAddParam::K1));
-		double c_y0_k2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::Y0, ba::BAAddParam::K2));
-		double c_y0_k3 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::Y0, ba::BAAddParam::K3));
-		double c_y0_p1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::Y0, ba::BAAddParam::P1));
-		double c_y0_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::Y0, ba::BAAddParam::P2));
-
-		double c_k1_k2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K1, ba::BAAddParam::K2));
-		double c_k1_k3 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K1, ba::BAAddParam::K3));
-		double c_k1_p1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K1, ba::BAAddParam::P1));
-		double c_k1_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K1, ba::BAAddParam::P2));
-
-		double c_k2_k3 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K2, ba::BAAddParam::K3));
-		double c_k2_p1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K2, ba::BAAddParam::P1));
-		double c_k2_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K2, ba::BAAddParam::P2));
-
-		double c_k3_p1 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K3, ba::BAAddParam::P1));
-		double c_k3_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::K3, ba::BAAddParam::P2));
-
-		double c_p1_p2 = ba.CorelationsCamparams.at(c.first).at(std::make_pair(ba::BAAddParam::P1, ba::BAAddParam::P2));
-
-		str << std::fixed << std::setprecision(3);
-		str << std::setw(15) << "."<<" "<<std::setw(10) << "CK" << " " << std::setw(10) << "X0" << " " << std::setw(10) << "Y0" << " " << std::setw(10) << "K1" << " " << std::setw(10) << "K2" <<" "<<std::setw(10) <<"K3"<< "\n";
-		str << std::setw(15) << "CK" << " " << std::setw(10) << 1.0     << " " << std::setw(10) << c_ck_x0 << " " << std::setw(10) << c_ck_y0 << " " << std::setw(10) << c_ck_k1 << " " << std::setw(10) << c_ck_k2<<" " << std::setw(10) <<c_ck_k3 <<"\n";
-		str << std::setw(15) << "X0" << " " << std::setw(10) << c_ck_x0 << " " << std::setw(10) << 1.00000 << " " << std::setw(10) << c_x0_y0 << " " << std::setw(10) << c_x0_k1 << " " << std::setw(10) << c_x0_k2<<" " << std::setw(10) <<c_x0_k3 <<"\n";
-		str << std::setw(15) << "Y0" << " " << std::setw(10) << c_ck_y0 << " " << std::setw(10) << c_x0_y0 << " " << std::setw(10) << 1.00000 << " " << std::setw(10) << c_y0_k1 << " " << std::setw(10) << c_y0_k2<<" " << std::setw(10) <<c_y0_k3 <<"\n";
-		str << std::setw(15) << "K1" << " " << std::setw(10) << c_ck_k1 << " " << std::setw(10) << c_x0_k1 << " " << std::setw(10) << c_y0_k1 << " " << std::setw(10) << 1.00000 << " " << std::setw(10) << c_k1_k2<<" " << std::setw(10) <<c_k1_k3 <<"\n";
-		str << std::setw(15) << "K2" << " " << std::setw(10) << c_ck_k2 << " " << std::setw(10) << c_x0_k2 << " " << std::setw(10) << c_y0_k2 << " " << std::setw(10) << c_k1_k2 << " " << std::setw(10) << 1.00000<<" " << std::setw(10) <<c_k2_k3 <<"\n";
-		str << std::setw(15) << "K3" << " " << std::setw(10) << c_ck_k3 << " " << std::setw(10) << c_x0_k3 << " " << std::setw(10) << c_y0_k3 << " " << std::setw(10) << c_k1_k3 << " " << std::setw(10) << c_k2_k3<<" " << std::setw(10) <<1.00000 <<"\n";
-		str << std::endl;
-
-		str << std::setw(15) << "." << " " << std::setw(10) << "P1" << " " << std::setw(10) << "P2" << "\n";
-		str << std::setw(15) << "CK" << " " << std::setw(10) << c_ck_p1	<< " " <<std::setw(10)  << c_ck_p1 <<"\n";
-		str << std::setw(15) << "X0" << " " << std::setw(10) << c_x0_p1 << " " << std::setw(10) << c_x0_p2 <<"\n";
-		str << std::setw(15) << "Y0" << " " << std::setw(10) << c_y0_p1 << " " << std::setw(10) << c_y0_p2 <<"\n";
-		str << std::setw(15) << "K1" << " " << std::setw(10) << c_k1_p1 << " " << std::setw(10) << c_k1_p2 <<"\n";
-		str << std::setw(15) << "K2" << " " << std::setw(10) << c_k2_p1 << " " << std::setw(10) << c_k2_p2 <<"\n";
-		str << std::setw(15) << "K3" << " " << std::setw(10) << c_k3_p1 << " " << std::setw(10) << c_k3_p2 <<"\n";
-		str << std::setw(15) << "P1" << " " << std::setw(10) << 1.00000 << " " << std::setw(10) << c_p1_p2 <<"\n";
-		str << std::setw(15) << "P2" << " " << std::setw(10) << c_p1_p2 << " " << std::setw(10) << 1.00000 <<std::endl;
 
 		str << "\nProjection to image plane: 10 X 10 grid of points - to compare several variants of calibration.";
 		str << "\nAll external orientation parameters are set to zero.";
@@ -595,6 +541,83 @@ BundleAdjustmentReport::BundleAdjustmentReport(BundleAdjustmentData& badata, Bun
 		}
 	}
 
+
+	if (badata.Settings.ComputeCorrelations == 1)
+	{
+
+		str << "\nCorrelations of camera parameters:\n";
+
+		for (const auto& correlationMatrix : ba.cameraParametersCorrelation.correlationMatricesForCameraParameters)
+		{
+			str << correlationMatrix.first << "\n";
+			str << std::fixed << std::setprecision(2) << correlationMatrix.second << "\n";
+		}
+
+		//if (badata.Settings.CamFixMasks)
+		str << "\nCorrelations of camera parameters and external orientation:\n";
+
+		for (const auto camFixMask : badata.Settings.CamFixMasks)
+		{
+			if (camFixMask.second & ba_fix_masks::mask_fix_io) continue;
+
+			str << "Camera: " << camFixMask.first << "\n";
+			str << std::setw(15) << "imageId" << " ";
+			str << "|";
+			str << std::setw(8) << "ck-X0" << " ";
+			str << std::setw(8) << "ck-Y0" << " ";
+			str << std::setw(8) << "ck-Z0" << " ";
+			str << std::setw(8) << "ck-A1" << " ";
+			str << std::setw(8) << "ck-A2" << " ";
+			str << std::setw(8) << "ck-A3" << " ";
+			str << "|";
+			str << std::setw(10) << "x0-X0" << " ";
+			str << std::setw(8) << "x0-Y0" << " ";
+			str << std::setw(8) << "x0-Z0" << " ";
+			str << std::setw(8) << "x0-A1" << " ";
+			str << std::setw(8) << "x0-A2" << " ";
+			str << std::setw(8) << "x0-A3" << " ";
+			str << "|";
+			str << std::setw(10) << "y0-X0" << " ";
+			str << std::setw(8) << "y0-Y0" << " ";
+			str << std::setw(8) << "y0-Z0" << " ";
+			str << std::setw(8) << "y0-A1" << " ";
+			str << std::setw(8) << "y0-A2" << " ";
+			str << std::setw(8) << "y0-A3" << " ";
+			str << "\n";
+			auto imageCouter{ 0 };
+
+
+			for (const auto& imData : badata.ImageOrientationData.DataImages)
+			{
+				str << std::setw(15) << imData.second.Name << " ";
+				str << "|";
+				str << std::fixed << std::setprecision(3);
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalDistance.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[0] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalDistance.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[1] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalDistance.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[2] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalDistance.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[0] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalDistance.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[1] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalDistance.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[2] << " ";
+				str << "|";
+				str << std::setw(10) << ba.cameraParametersCorrelation.correlationsForPrincipalPointX.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[0] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointX.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[1] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointX.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[2] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointX.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[0] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointX.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[1] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointX.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[2] << " ";
+				str << "|";
+				str << std::setw(10) << ba.cameraParametersCorrelation.correlationsForPrincipalPointY.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[0] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointY.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[1] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointY.at(camFixMask.first).at(imageCouter).second.correlationsWithCoordinates[2] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointY.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[0] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointY.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[1] << " ";
+				str << std::setw(8) << ba.cameraParametersCorrelation.correlationsForPrincipalPointY.at(camFixMask.first).at(imageCouter).second.correlationsWithAngles[2] << " ";
+
+				str << "\n";
+				imageCouter++;
+			}
+		}
+	}
 
 	str << "\nEstimated external orientation parameters of images:\n";
 
